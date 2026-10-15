@@ -53,6 +53,12 @@
 
       <!-- Controls & Theme Toggle -->
       <div class="flex flex-wrap items-center gap-3">
+        <!-- Novo Botão de Redirecionamento/Visualização de Depósitos Judiciais e Bloqueios -->
+        <button onclick="openJudicialSection()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-sm flex items-center gap-1.5 transition-colors">
+          <i data-lucide="scale" class="w-4 h-4"></i>
+          Depósito Judicial & Bloqueios
+        </button>
+
         <!-- Year Filter -->
         <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-700 p-1 rounded-lg">
           <button onclick="setFilter('ALL')" id="filter-all" class="filter-btn px-3 py-1.5 text-xs font-medium rounded-md transition-all bg-white dark:bg-slate-800 text-slate-800 dark:text-white shadow-sm">Todos</button>
@@ -81,6 +87,25 @@
       <!-- Cards renderizados dinamicamente via JS -->
     </div>
   </main>
+
+  <!-- Seção Modal: Depósitos Judiciais & Bloqueios -->
+  <div id="judicial-modal" class="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm hidden flex-col items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="p-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between bg-slate-100 dark:bg-slate-800">
+        <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <i data-lucide="scale" class="w-5 h-5 text-blue-600 dark:text-blue-400"></i>
+          Comprovantes de Depósitos Judiciais & Bloqueios de Conta
+        </h2>
+        <button onclick="closeJudicialSection()" class="p-2 text-slate-500 hover:text-slate-800 dark:hover:text-white rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-6 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-6" id="judicial-grid">
+        <!-- Renderizado via JS -->
+      </div>
+    </div>
+  </div>
 
   <!-- Lightbox Modal -->
   <div id="lightbox" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm hidden flex-col items-center justify-between p-4 transition-opacity duration-200">
@@ -115,12 +140,9 @@
   </div>
 
   <script>
-    // ==========================================
-    // CONFIGURAÇÃO DO REPOSITÓRIO E MAPEAMENTO
-    // ==========================================
     const BASE_RAW_URL = 'https://raw.githubusercontent.com/guigesaifarm/pensao_vinicius/main/';
 
-    // Mapeamento explícito incluindo os Décimos Terceiros
+    // Mapeamento dos Pagamentos Mensais e 13º
     const MAPA_ITENS = [
       { key: '2025-06', title: 'Junho de 2025', year: 2025, month: 5, filenames: ['junho_2025.jpg', 'Junho_2025.jpg'] },
       { key: '2025-07', title: 'Julho de 2025', year: 2025, month: 6, filenames: ['julho_2025.jpg', 'Julho_2025.jpg'] },
@@ -144,9 +166,16 @@
       { key: '2026-13', title: '13º Salário de 2026', year: 2026, month: 9.5, filenames: ['DecimoTerceiro_2026.jpg', 'decimoterceiro_2026.jpg'] }
     ];
 
+    // Mapeamento dos Comprovantes Judiciais e Bloqueios
+    const MAPA_JUDICIAL = [
+      { title: 'Depósito Judicial', filenames: ['deposito_judicial.jpg', 'DepositoJudicial.jpg', 'deposito_judicial.png'] },
+      { title: 'Bloqueio de Conta Corrente', filenames: ['bloqueio_conta.jpg', 'BloqueioConta.jpg', 'bloqueio_conta.png'] }
+    ];
+
     let currentFilter = 'ALL';
     let currentSort = 'DESC'; 
     let itemsData = [];
+    let judicialData = [];
     let currentZoom = 1;
     let currentRotation = 0;
 
@@ -273,6 +302,48 @@
       lucide.createIcons();
     }
 
+    // Modal Judiciais
+    function openJudicialSection() {
+      const grid = document.getElementById('judicial-grid');
+      grid.innerHTML = '';
+
+      judicialData.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700 p-4 flex flex-col items-center';
+
+        if (item.loadedSrcs && item.loadedSrcs.length > 0) {
+          const imgObj = item.loadedSrcs[0];
+          card.innerHTML = `
+            <h3 class="font-bold text-slate-800 dark:text-slate-100 mb-3">${item.title}</h3>
+            <div class="w-full aspect-[16/10] bg-slate-200 dark:bg-slate-800 rounded-lg overflow-hidden relative cursor-pointer group" onclick="openLightbox('${imgObj.url}', '${item.title}')">
+              <img src="${imgObj.url}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+              <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-medium text-sm gap-2">
+                <i data-lucide="maximize-2" class="w-4 h-4"></i> Ampliar
+              </div>
+            </div>
+          `;
+        } else {
+          card.innerHTML = `
+            <h3 class="font-bold text-slate-800 dark:text-slate-100 mb-2">${item.title}</h3>
+            <p class="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 p-3 rounded-lg border border-amber-200 dark:border-amber-800 text-center">
+              Comprovante não localizado no repositório.<br>Adicione o arquivo <b>deposito_judicial.jpg</b> ou <b>bloqueio_conta.jpg</b> no GitHub.
+            </p>
+          `;
+        }
+
+        grid.appendChild(card);
+      });
+
+      document.getElementById('judicial-modal').classList.remove('hidden');
+      document.getElementById('judicial-modal').classList.add('flex');
+      lucide.createIcons();
+    }
+
+    function closeJudicialSection() {
+      document.getElementById('judicial-modal').classList.add('hidden');
+      document.getElementById('judicial-modal').classList.remove('flex');
+    }
+
     function setFilter(year) {
       currentFilter = year;
       document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -343,7 +414,10 @@
     }
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'Escape') {
+        closeLightbox();
+        closeJudicialSection();
+      }
     });
 
     window.onload = async () => {
@@ -354,6 +428,8 @@
       }
 
       itemsData = await Promise.all(MAPA_ITENS.map(item => tryLoadImages(item)));
+      judicialData = await Promise.all(MAPA_JUDICIAL.map(item => tryLoadImages(item)));
+
       renderGrid();
     };
   </script>
