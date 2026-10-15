@@ -1,914 +1,375 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="light">
+<html lang="pt-BR" class="h-full">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comprovantes de Pensão - Vinicius da Silva Alves</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            50: '#f0f7ff',
-                            100: '#e0effe',
-                            500: '#0284c7',
-                            600: '#0284c7',
-                            700: '#0369a1',
-                            800: '#075985',
-                            900: '#0c4a6e',
-                        }
-                    }
-                }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comprovantes de Pensão - Vinicius da Silva Alves</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              500: '#16a34a',
+              600: '#15803d',
+              700: '#166534',
             }
+          }
         }
-    </script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        @media print {
-            .no-print {
-                display: none !important;
-            }
-            .print-only {
-                display: block !important;
-            }
-            body {
-                background: white !important;
-                color: black !important;
-            }
-        }
-        /* Style adjustments for image rotation and zoom */
-        .zoom-container {
-            overflow: hidden;
-            cursor: grab;
-        }
-        .zoom-container:active {
-            cursor: grabbing;
-        }
-        .img-transform {
-            transition: transform 0.2s ease-out;
-            transform-origin: center center;
-        }
-    </style>
+      }
+    }
+  </script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .img-zoom {
+      transition: transform 0.3s ease, rotate 0.3s ease;
+    }
+  </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-200">
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-full flex flex-col transition-colors duration-200">
 
-    <!-- Notificação Toast -->
-    <div id="toast" class="fixed bottom-5 right-5 z-50 flex items-center gap-3 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-4 py-3 rounded-xl shadow-2xl transition-all duration-300 opacity-0 translate-y-10 pointer-events-none">
-        <i id="toast-icon" data-lucide="check-circle" class="w-5 h-5 text-emerald-400 dark:text-emerald-600"></i>
-        <span id="toast-message" class="text-sm font-medium">Operação realizada com sucesso!</span>
+  <!-- Header Section -->
+  <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div>
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <i data-lucide="receipt" class="w-6 h-6 text-brand-600 dark:text-brand-500"></i>
+          Comprovantes de Pensão - Vinicius da Silva Alves
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5">
+          <i data-lucide="calendar-range" class="w-4 h-4"></i>
+          Período: Junho de 2025 a Outubro de 2026
+        </p>
+      </div>
+
+      <!-- Controls & Theme Toggle -->
+      <div class="flex flex-wrap items-center gap-3">
+        <!-- Year Filter -->
+        <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-700 p-1 rounded-lg">
+          <button onclick="setFilter('ALL')" id="filter-all" class="filter-btn px-3 py-1.5 text-xs font-medium rounded-md transition-all bg-white dark:bg-slate-800 text-slate-800 dark:text-white shadow-sm">Todos</button>
+          <button onclick="setFilter('2025')" id="filter-2025" class="filter-btn px-3 py-1.5 text-xs font-medium rounded-md transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">2025</button>
+          <button onclick="setFilter('2026')" id="filter-2026" class="filter-btn px-3 py-1.5 text-xs font-medium rounded-md transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">2026</button>
+        </div>
+
+        <!-- Sort Toggle -->
+        <button onclick="toggleSort()" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-medium flex items-center gap-1.5 transition-colors" title="Alternar Ordenação">
+          <i data-lucide="arrow-up-down" class="w-4 h-4"></i>
+          <span id="sort-label" class="hidden sm:inline">Mais Recente</span>
+        </button>
+
+        <!-- Theme Toggle -->
+        <button onclick="toggleTheme()" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 transition-colors" title="Alternar Tema">
+          <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
+          <i data-lucide="moon" class="w-4 h-4 block dark:hidden"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Grid -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div id="grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Cards renderizados dinamicamente via JS -->
+    </div>
+  </main>
+
+  <!-- Lightbox Modal -->
+  <div id="lightbox" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm hidden flex-col items-center justify-between p-4 transition-opacity duration-200">
+    <!-- Lightbox Top Toolbar -->
+    <div class="w-full flex items-center justify-between text-white max-w-5xl">
+      <span id="lightbox-title" class="font-semibold text-lg"></span>
+      <div class="flex items-center gap-2">
+        <button onclick="zoomIn()" class="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors" title="Ampliar">
+          <i data-lucide="zoom-in" class="w-5 h-5"></i>
+        </button>
+        <button onclick="zoomOut()" class="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors" title="Reduzir">
+          <i data-lucide="zoom-out" class="w-5 h-5"></i>
+        </button>
+        <button onclick="rotateImage()" class="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors" title="Rotacionar">
+          <i data-lucide="rotate-cw" class="w-5 h-5"></i>
+        </button>
+        <button onclick="closeLightbox()" class="p-2 rounded-lg bg-red-600/80 hover:bg-red-600 text-white transition-colors ml-4" title="Fechar">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
     </div>
 
-    <!-- Cabeçalho / Hero Section -->
-    <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-30 no-print backdrop-blur-md bg-white/90 dark:bg-slate-800/90">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div class="flex items-center space-x-3">
-                    <div class="p-2.5 bg-blue-100 dark:bg-blue-900/50 rounded-xl text-blue-600 dark:text-blue-400">
-                        <i data-lucide="file-check-2" class="w-7 h-7"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                            Comprovantes de Pensão Alimentícia
-                        </h1>
-                        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-0.5">
-                            <i data-lucide="user" class="w-3.5 h-3.5"></i>
-                            Beneficiário: <strong class="text-slate-700 dark:text-slate-200 font-semibold">Vinicius da Silva Alves</strong>
-                            <span class="mx-1">•</span>
-                            <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
-                            Junho/2025 a Outubro/2026
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Botões de Ação do Topo -->
-                <div class="flex items-center gap-2 self-end md:self-auto">
-                    <button id="theme-toggle" class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700/60 text-slate-600 dark:text-slate-300 transition-colors" title="Alternar Tema">
-                        <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
-                        <i data-lucide="moon" class="w-5 h-5 block dark:hidden"></i>
-                    </button>
-                    <button onclick="exportSummaryData()" class="flex items-center gap-2 px-3.5 py-2 text-sm font-medium border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700/60 transition-colors">
-                        <i data-lucide="download" class="w-4 h-4"></i>
-                        <span class="hidden sm:inline">Exportar Relatório</span>
-                    </button>
-                    <button onclick="document.getElementById('quick-upload-section').scrollIntoView({behavior: 'smooth'})" class="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-sm transition-all duration-200 active:scale-95">
-                        <i data-lucide="upload" class="w-4 h-4"></i>
-                        <span>Anexar Comprovante</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-
-        <!-- Dashboard / Cards Estatísticos -->
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 no-print">
-            <!-- Total de Meses -->
-            <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total no Período</p>
-                    <h3 id="stat-total-months" class="text-2xl font-bold mt-1 text-slate-900 dark:text-white">17 Meses</h3>
-                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Jun/2025 - Out/2026</p>
-                </div>
-                <div class="p-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl">
-                    <i data-lucide="calendar-range" class="w-6 h-6"></i>
-                </div>
-            </div>
-
-            <!-- Meses Quitados -->
-            <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Status Quitação</p>
-                    <h3 id="stat-paid-months" class="text-2xl font-bold mt-1 text-emerald-600 dark:text-emerald-400">0 / 17</h3>
-                    <div class="w-32 bg-slate-100 dark:bg-slate-700 rounded-full h-1.5 mt-2 overflow-hidden">
-                        <div id="stat-progress-bar" class="bg-emerald-500 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
-                    </div>
-                </div>
-                <div class="p-3 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl">
-                    <i data-lucide="check-circle-2" class="w-6 h-6"></i>
-                </div>
-            </div>
-
-            <!-- Total Pago Acumulado -->
-            <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Anexado/Pago</p>
-                    <h3 id="stat-total-amount" class="text-2xl font-bold mt-1 text-slate-900 dark:text-white">R$ 0,00</h3>
-                    <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Com comprovante validado</p>
-                </div>
-                <div class="p-3 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl">
-                    <i data-lucide="dollar-sign" class="w-6 h-6"></i>
-                </div>
-            </div>
-
-            <!-- Status Geral -->
-            <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Situação Geral</p>
-                    <h3 id="stat-general-status" class="text-lg font-bold mt-1 text-amber-600 dark:text-amber-400">Pendente</h3>
-                    <p id="stat-pending-count" class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">17 comprovantes aguardando</p>
-                </div>
-                <div class="p-3 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-xl">
-                    <i data-lucide="shield-alert" class="w-6 h-6"></i>
-                </div>
-            </div>
-        </section>
-
-        <!-- Barra de Filtros, Ordenação e Pesquisa -->
-        <section class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm space-y-4 no-print">
-            <div class="flex flex-col lg:flex-row gap-3 justify-between items-stretch lg:items-center">
-                <!-- Caixa de Pesquisa -->
-                <div class="relative flex-1">
-                    <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                    <input type="text" id="search-input" placeholder="Buscar por mês, ano, valor ou observação..." 
-                        class="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
-                </div>
-
-                <!-- Selects de Filtro -->
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                    <!-- Ano -->
-                    <select id="filter-year" class="px-3 py-2.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="ALL">Todos os Anos</option>
-                        <option value="2025">Ano 2025</option>
-                        <option value="2026">Ano 2026</option>
-                    </select>
-
-                    <!-- Status -->
-                    <select id="filter-status" class="px-3 py-2.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="ALL">Todos os Status</option>
-                        <option value="PAGO">Pago / Confirmado</option>
-                        <option value="PENDENTE">Pendente / Sem Anexo</option>
-                    </select>
-
-                    <!-- Ordenação -->
-                    <select id="sort-order" class="px-3 py-2.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 col-span-2 sm:col-span-1">
-                        <option value="ASC">Mais antigo primeiro</option>
-                        <option value="DESC">Mais recente primeiro</option>
-                    </select>
-                </div>
-            </div>
-        </section>
-
-        <!-- Galeria / Grid de Comprovantes -->
-        <section>
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <i data-lucide="grid" class="w-5 h-5 text-blue-600"></i>
-                    Lista de Comprovantes Mensais
-                </h2>
-                <span id="rendered-count-badge" class="text-xs font-semibold px-2.5 py-1 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full">
-                    Exibindo 17 registros
-                </span>
-            </div>
-
-            <!-- Grid Container -->
-            <div id="receipts-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Cards renderizados via JavaScript -->
-            </div>
-
-            <!-- Estado Vazio / Nenhum resultado -->
-            <div id="empty-state" class="hidden text-center py-12 bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 my-4">
-                <i data-lucide="file-x" class="w-12 h-12 text-slate-400 mx-auto mb-3"></i>
-                <h3 class="text-base font-semibold text-slate-800 dark:text-slate-200">Nenhum comprovante encontrado</h3>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Tente alterar os termos da busca ou ajustar os filtros selecionados.</p>
-            </div>
-        </section>
-
-        <!-- Seção de Upload Rápido / Gerenciador Global -->
-        <section id="quick-upload-section" class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm no-print scroll-mt-24">
-            <div class="max-w-2xl mx-auto">
-                <div class="text-center mb-6">
-                    <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mx-auto mb-2">
-                        <i data-lucide="upload-cloud" class="w-6 h-6"></i>
-                    </div>
-                    <h3 class="text-lg font-bold text-slate-900 dark:text-white">Gerenciador de Envio Rápido</h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                        Selecione o mês correspondente, preencha as informações e carregue o comprovante em formato JPEG.
-                    </p>
-                </div>
-
-                <form id="quick-upload-form" class="space-y-4">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Selecione o Mês Ref.</label>
-                            <select id="quick-month-select" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <!-- Opções preenchidas via JS -->
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Data do Pagamento</label>
-                            <input type="date" id="quick-date-input" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Valor Pago (R$)</label>
-                            <input type="number" step="0.01" min="0" id="quick-amount-input" placeholder="0.00" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Arquivo Comprovante (.jpeg / .jpg)</label>
-                            <input type="file" id="quick-file-input" accept="image/jpeg, image/jpg" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-900/50 dark:file:text-blue-300 hover:file:bg-blue-100 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-900">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Observações (Opcional)</label>
-                        <input type="text" id="quick-notes-input" placeholder="Ex: Transferência via Pix / Banco do Brasil" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-
-                    <div class="flex justify-end gap-3 pt-2">
-                        <button type="reset" class="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700">
-                            Limpar
-                        </button>
-                        <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm transition-all flex items-center gap-1.5">
-                            <i data-lucide="save" class="w-4 h-4"></i>
-                            Salvar Comprovante
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- Rodapé -->
-    <footer class="mt-12 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-6 text-center text-xs text-slate-500 dark:text-slate-400 no-print">
-        <div class="max-w-7xl mx-auto px-4">
-            <p>Sistema de Comprovação de Pagamentos de Pensão Alimentícia — Vinicius da Silva Alves</p>
-            <p class="mt-1 text-slate-400 dark:text-slate-600">Desenvolvido para fácil hospedagem no GitHub Pages. Dados mantidos localmente no navegador.</p>
-        </div>
-    </footer>
-
-    <!-- MODAL LIGHTBOX INTERATIVO -->
-    <div id="lightbox-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex-col justify-between transition-opacity duration-300">
-        <!-- Topo do Modal -->
-        <div class="flex items-center justify-between p-4 bg-slate-900/90 text-white border-b border-slate-800">
-            <div class="flex items-center gap-3">
-                <i data-lucide="file-text" class="w-5 h-5 text-blue-400"></i>
-                <div>
-                    <h3 id="modal-title" class="text-sm font-bold">Comprovante - Junho/2025</h3>
-                    <p id="modal-subtitle" class="text-xs text-slate-400">Vinicius da Silva Alves • R$ 0,00</p>
-                </div>
-            </div>
-
-            <!-- Ações do Modal -->
-            <div class="flex items-center gap-2">
-                <button onclick="rotateImage(-90)" class="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 hover:text-white transition" title="Girar Anti-Horário">
-                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
-                </button>
-                <button onclick="rotateImage(90)" class="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 hover:text-white transition" title="Girar Horário">
-                    <i data-lucide="rotate-cw" class="w-4 h-4"></i>
-                </button>
-                <button onclick="zoomImage(0.2)" class="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 hover:text-white transition" title="Aumentar Zoom">
-                    <i data-lucide="zoom-in" class="w-4 h-4"></i>
-                </button>
-                <button onclick="zoomImage(-0.2)" class="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 hover:text-white transition" title="Diminuir Zoom">
-                    <i data-lucide="zoom-out" class="w-4 h-4"></i>
-                </button>
-                <button onclick="resetImageTransform()" class="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 hover:text-white transition text-xs font-semibold px-2.5" title="Resetar Exibição">
-                    100%
-                </button>
-                <button onclick="printCurrentReceipt()" class="p-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition flex items-center gap-1.5 text-xs font-medium ml-2">
-                    <i data-lucide="printer" class="w-4 h-4"></i>
-                    <span class="hidden sm:inline">Imprimir</span>
-                </button>
-                <button onclick="closeModal()" class="p-2 bg-rose-600/80 hover:bg-rose-600 text-white rounded-lg transition ml-2">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-        </div>
-
-        <!-- Conteúdo Principal do Modal (Visualização da Imagem) -->
-        <div class="relative flex-1 flex items-center justify-center p-4 overflow-hidden select-none">
-            <!-- Botão Mês Anterior -->
-            <button onclick="navigateModal(-1)" class="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-3 bg-slate-900/80 hover:bg-blue-600 text-white rounded-full transition shadow-lg backdrop-blur-sm">
-                <i data-lucide="chevron-left" class="w-6 h-6"></i>
-            </button>
-
-            <!-- Container da Imagem -->
-            <div id="modal-image-wrapper" class="w-full h-full flex items-center justify-center zoom-container">
-                <img id="modal-image" src="" alt="Comprovante de Pagamento" class="max-h-full max-w-full object-contain rounded-lg shadow-2xl img-transform">
-            </div>
-
-            <!-- Botão Próximo Mês -->
-            <button onclick="navigateModal(1)" class="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-3 bg-slate-900/80 hover:bg-blue-600 text-white rounded-full transition shadow-lg backdrop-blur-sm">
-                <i data-lucide="chevron-right" class="w-6 h-6"></i>
-            </button>
-        </div>
-
-        <!-- Rodapé do Modal -->
-        <div class="p-3 bg-slate-900/90 border-t border-slate-800 text-center text-xs text-slate-400 flex flex-wrap justify-between items-center gap-2 px-6">
-            <span id="modal-date">Data: --/--/----</span>
-            <span id="modal-notes" class="italic">Obs: Nenhuma observação</span>
-            <span id="modal-status-badge" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400">
-                Confirmado
-            </span>
-        </div>
+    <!-- Lightbox Image View -->
+    <div class="flex-1 w-full flex items-center justify-center overflow-hidden my-4">
+      <img id="lightbox-img" src="" alt="Comprovante ampliado" class="max-h-[85vh] max-w-full object-contain img-zoom shadow-2xl rounded-lg">
     </div>
 
-    <!-- ÁREA EXCLUSIVA PARA IMPRESSÃO IMPERCEPTÍVEL NA TELA -->
-    <div id="print-area" class="hidden print-only p-8">
-        <div class="border-b pb-4 mb-6">
-            <h1 class="text-2xl font-bold">Comprovante de Pagamento de Pensão Alimentícia</h1>
-            <p class="text-sm text-gray-600">Beneficiário: Vinicius da Silva Alves</p>
-        </div>
-        <div class="mb-6 space-y-2 text-sm">
-            <p><strong>Mês de Referência:</strong> <span id="print-month">--</span></p>
-            <p><strong>Data de Pagamento:</strong> <span id="print-date">--</span></p>
-            <p><strong>Valor:</strong> <span id="print-amount">--</span></p>
-            <p><strong>Observações:</strong> <span id="print-notes">--</span></p>
-        </div>
-        <div class="mt-4 border p-2 text-center">
-            <img id="print-image" src="" alt="Comprovante Anexo" class="max-w-full h-auto mx-auto max-h-[650px] object-contain">
-        </div>
+    <!-- Lightbox Footer Info -->
+    <div class="text-white/60 text-xs text-center">
+      Pressione <kbd class="px-1.5 py-0.5 bg-white/20 rounded">ESC</kbd> para fechar
     </div>
+  </div>
 
-    <!-- SCRIPT DE LÓGICA DO SISTEMA -->
-    <script>
-        // Estrutura de dados inicial cobrindo Junho/2025 a Outubro/2026 (17 meses)
-        const MONTHS_CONFIG = [
-            { id: '2025-06', label: 'Junho / 2025', year: '2025', monthName: 'Junho' },
-            { id: '2025-07', label: 'Julho / 2025', year: '2025', monthName: 'Julho' },
-            { id: '2025-08', label: 'Agosto / 2025', year: '2025', monthName: 'Agosto' },
-            { id: '2025-09', label: 'Setembro / 2025', year: '2025', monthName: 'Setembro' },
-            { id: '2025-10', label: 'Outubro / 2025', year: '2025', monthName: 'Outubro' },
-            { id: '2025-11', label: 'Novembro / 2025', year: '2025', monthName: 'Novembro' },
-            { id: '2025-12', label: 'Dezembro / 2025', year: '2025', monthName: 'Dezembro' },
-            { id: '2026-01', label: 'Janeiro / 2026', year: '2026', monthName: 'Janeiro' },
-            { id: '2026-02', label: 'Fevereiro / 2026', year: '2026', monthName: 'Fevereiro' },
-            { id: '2026-03', label: 'Março / 2026', year: '2026', monthName: 'Março' },
-            { id: '2026-04', label: 'Abril / 2026', year: '2026', monthName: 'Abril' },
-            { id: '2026-05', label: 'Maio / 2026', year: '2026', monthName: 'Maio' },
-            { id: '2026-06', label: 'Junho / 2026', year: '2026', monthName: 'Junho' },
-            { id: '2026-07', label: 'Julho / 2026', year: '2026', monthName: 'Julho' },
-            { id: '2026-08', label: 'Agosto / 2026', year: '2026', monthName: 'Agosto' },
-            { id: '2026-09', label: 'Setembro / 2026', year: '2026', monthName: 'Setembro' },
-            { id: '2026-10', label: 'Outubro / 2026', year: '2026', monthName: 'Outubro' }
-        ];
+  <script>
+    // ==========================================
+    // CONFIGURAÇÕES DO REPOSITÓRIO
+    // ==========================================
+    // Altere este caminho se a pasta de comprovantes estiver em outro diretório
+    const PASTA_COMPROVANTES = 'comprovantes/';
 
-        // Estado principal da aplicação
-        let receiptsData = {};
-        let currentModalIndex = 0;
-        let currentFilteredIds = [];
-        let currentZoom = 1;
-        let currentRotation = 0;
+    // Formatos e convenções de nomes suportados para busca automática
+    const FORMATOS = ['jpeg', 'jpg', 'png'];
 
-        // Imagem Placeholder SVGs codificados quando não houver imagem
-        const PLACEHOLDER_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='260' viewBox='0 0 400 260' fill='none'%3E%3Crect width='400' height='260' fill='%23F1F5F9'/%3E%3Cpath d='M175 110L200 85L225 110' stroke='%2394A3B8' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M200 85V145' stroke='%2394A3B8' stroke-width='4' stroke-linecap='round'/%3E%3Crect x='130' y='165' width='140' height='12' rx='6' fill='%23CBD5E1'/%3E%3Ctext x='50%25' y='210' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='13' fill='%2364748B'%3EAnexar Comprovante JPEG%3E%3C/text%3E%3C/svg%3E";
+    // Mapeamento dos nomes dos meses
+    const NOMES_MESES = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
 
-        // Inicialização
-        document.addEventListener('DOMContentLoaded', () => {
-            loadStoredData();
-            populateQuickSelect();
-            setupEventListeners();
-            renderGrid();
-            updateDashboard();
-            lucide.createIcons();
-        });
+    // Estado da Aplicação
+    let currentFilter = 'ALL';
+    let currentSort = 'DESC'; // 'DESC' = Mais recente primeiro | 'ASC' = Mais antigo primeiro
+    let itemsData = [];
+    let currentZoom = 1;
+    let currentRotation = 0;
 
-        // Carregar dados salvos do localStorage
-        function loadStoredData() {
-            const saved = localStorage.getItem('vinicius_pension_receipts');
-            if (saved) {
-                try {
-                    receiptsData = JSON.parse(saved);
-                } catch(e) {
-                    receiptsData = {};
-                }
-            }
+    // Gerar a lista de meses (Jun/2025 a Out/2026)
+    function generatePeriodList() {
+      const list = [];
+      const startYear = 2025;
+      const startMonth = 5; // Junho (0-indexed)
+      const endYear = 2026;
+      const endMonth = 9;  // Outubro (0-indexed)
 
-            // Garantir integridade dos 17 meses
-            MONTHS_CONFIG.forEach(m => {
-                if (!receiptsData[m.id]) {
-                    receiptsData[m.id] = {
-                        id: m.id,
-                        status: 'PENDENTE', // 'PAGO' ou 'PENDENTE'
-                        date: '',
-                        amount: '',
-                        notes: '',
-                        imageUrl: null
-                    };
-                }
-            });
+      for (let y = startYear; y <= endYear; y++) {
+        const mStart = (y === startYear) ? startMonth : 0;
+        const mEnd = (y === endYear) ? endMonth : 11;
+
+        for (let m = mStart; m <= mEnd; m++) {
+          const monthStrNum = String(m + 1).padStart(2, '0');
+          const monthNameLower = NOMES_MESES[m].toLowerCase();
+          
+          // Gerar variações de nomes possíveis
+          const possiblePaths = [];
+          FORMATOS.forEach(ext => {
+            possiblePaths.push(`${PASTA_COMPROVANTES}${y}-${monthStrNum}.${ext}`);
+            possiblePaths.push(`${PASTA_COMPROVANTES}${monthNameLower}-${y}.${ext}`);
+            possiblePaths.push(`${PASTA_COMPROVANTES}${monthStrNum}-${y}.${ext}`);
+          });
+
+          list.push({
+            year: y,
+            month: m,
+            monthName: NOMES_MESES[m],
+            title: `${NOMES_MESES[m]} de ${y}`,
+            possiblePaths: possiblePaths,
+            loadedSrc: null,
+            notFound: false
+          });
+        }
+      }
+      return list;
+    }
+
+    // Tentar carregar imagem das rotas possíveis
+    function tryLoadImage(item) {
+      return new Promise((resolve) => {
+        let pathIndex = 0;
+
+        function attemptNext() {
+          if (pathIndex >= item.possiblePaths.length) {
+            item.notFound = true;
+            resolve(item);
+            return;
+          }
+
+          const currentPath = item.possiblePaths[pathIndex];
+          const img = new Image();
+          
+          img.onload = () => {
+            item.loadedSrc = currentPath;
+            item.notFound = false;
+            resolve(item);
+          };
+
+          img.onerror = () => {
+            pathIndex++;
+            attemptNext();
+          };
+
+          img.src = currentPath;
         }
 
-        // Salvar dados no localStorage
-        function saveData() {
-            try {
-                localStorage.setItem('vinicius_pension_receipts', JSON.stringify(receiptsData));
-            } catch (e) {
-                showToast('Aviso: O armazenamento local excedeu a capacidade para imagens muito grandes.', 'alert');
-            }
-            updateDashboard();
-            renderGrid();
+        attemptNext();
+      });
+    }
+
+    // Renderizar Interface
+    function renderGrid() {
+      const container = document.getElementById('grid-container');
+      container.innerHTML = '';
+
+      // Filtragem
+      let filtered = itemsData.filter(item => {
+        if (currentFilter === 'ALL') return true;
+        return item.year.toString() === currentFilter;
+      });
+
+      // Ordenação
+      filtered.sort((a, b) => {
+        const dateA = new Date(a.year, a.month);
+        const dateB = new Date(b.year, b.month);
+        return currentSort === 'DESC' ? dateB - dateA : dateA - dateB;
+      });
+
+      // Gerar Cards
+      filtered.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow';
+
+        let contentHTML = '';
+
+        if (item.loadedSrc) {
+          contentHTML = `
+            <div class="relative group cursor-pointer overflow-hidden bg-slate-100 dark:bg-slate-900 aspect-[4/3] flex items-center justify-center" onclick="openLightbox('${item.loadedSrc}', '${item.title}')">
+              <img src="${item.loadedSrc}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+              <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white font-medium text-sm">
+                <i data-lucide="maximize-2" class="w-5 h-5"></i>
+                Visualizar Comprovante
+              </div>
+            </div>
+          `;
+        } else {
+          contentHTML = `
+            <div class="p-6 bg-slate-50 dark:bg-slate-900/50 aspect-[4/3] flex flex-col items-center justify-center text-center border-t border-slate-100 dark:border-slate-700/50">
+              <div class="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-3">
+                <i data-lucide="image-off" class="w-6 h-6"></i>
+              </div>
+              <p class="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Comprovante não localizado no repositório</p>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 max-w-[220px]">
+                Adicione a imagem na pasta <code class="bg-slate-200 dark:bg-slate-800 px-1 py-0.5 rounded text-brand-600 dark:text-brand-400 font-mono">${PASTA_COMPROVANTES}</code> com o nome <code class="bg-slate-200 dark:bg-slate-800 px-1 py-0.5 rounded font-mono">${item.year}-${String(item.month + 1).padStart(2, '0')}.jpeg</code>
+              </p>
+            </div>
+          `;
         }
 
-        // Preencher o seletor do form rápido
-        function populateQuickSelect() {
-            const select = document.getElementById('quick-month-select');
-            select.innerHTML = MONTHS_CONFIG.map(m => 
-                `<option value="${m.id}">${m.label}</option>`
-            ).join('');
-        }
-
-        // Configuração de ouvintes de eventos
-        function setupEventListeners() {
-            // Dark Mode Toggle
-            document.getElementById('theme-toggle').addEventListener('click', () => {
-                document.documentElement.classList.toggle('dark');
-            });
-
-            // Filtros de busca
-            document.getElementById('search-input').addEventListener('input', renderGrid);
-            document.getElementById('filter-year').addEventListener('change', renderGrid);
-            document.getElementById('filter-status').addEventListener('change', renderGrid);
-            document.getElementById('sort-order').addEventListener('change', renderGrid);
-
-            // Formulário rápido
-            document.getElementById('quick-upload-form').addEventListener('submit', handleQuickFormSubmit);
-        }
-
-        // Atualizar Dashboard e Indicadores
-        function updateDashboard() {
-            const totalMonths = MONTHS_CONFIG.length;
-            let paidCount = 0;
-            let totalAmount = 0;
-
-            Object.values(receiptsData).forEach(item => {
-                if (item.status === 'PAGO') {
-                    paidCount++;
-                    if (item.amount) totalAmount += parseFloat(item.amount);
-                }
-            });
-
-            // Atualiza UI
-            document.getElementById('stat-total-months').innerText = `${totalMonths} Meses`;
-            document.getElementById('stat-paid-months').innerText = `${paidCount} / ${totalMonths}`;
-
-            const percent = Math.round((paidCount / totalMonths) * 100);
-            document.getElementById('stat-progress-bar').style.width = `${percent}%`;
-
-            document.getElementById('stat-total-amount').innerText = totalAmount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
-            const statusEl = document.getElementById('stat-general-status');
-            const pendingEl = document.getElementById('stat-pending-count');
-
-            if (paidCount === totalMonths) {
-                statusEl.innerText = 'Totalmente Quitado';
-                statusEl.className = 'text-lg font-bold mt-1 text-emerald-600 dark:text-emerald-400';
-                pendingEl.innerText = 'Todos os comprovantes em dia';
-            } else if (paidCount > 0) {
-                statusEl.innerText = 'Em Andamento';
-                statusEl.className = 'text-lg font-bold mt-1 text-blue-600 dark:text-blue-400';
-                pendingEl.innerText = `${totalMonths - paidCount} mês(es) pendente(s)`;
-            } else {
-                statusEl.innerText = 'Pendente';
-                statusEl.className = 'text-lg font-bold mt-1 text-amber-600 dark:text-amber-400';
-                pendingEl.innerText = `${totalMonths} comprovantes aguardando`;
-            }
-        }
-
-        // Função de Renderização dos Cards na Galeria
-        function renderGrid() {
-            const grid = document.getElementById('receipts-grid');
-            const emptyState = document.getElementById('empty-state');
-
-            const searchVal = document.getElementById('search-input').value.toLowerCase();
-            const yearFilter = document.getElementById('filter-year').value;
-            const statusFilter = document.getElementById('filter-status').value;
-            const sortOrder = document.getElementById('sort-order').value;
-
-            // Filtragem
-            let filtered = MONTHS_CONFIG.filter(cfg => {
-                const data = receiptsData[cfg.id];
-
-                // Filtro de Ano
-                if (yearFilter !== 'ALL' && cfg.year !== yearFilter) return false;
-
-                // Filtro de Status
-                if (statusFilter !== 'ALL' && data.status !== statusFilter) return false;
-
-                // Filtro de Busca
-                if (searchVal) {
-                    const matchLabel = cfg.label.toLowerCase().includes(searchVal);
-                    const matchNotes = (data.notes || '').toLowerCase().includes(searchVal);
-                    const matchDate = (data.date || '').includes(searchVal);
-                    const matchAmount = (data.amount || '').toString().includes(searchVal);
-                    return matchLabel || matchNotes || matchDate || matchAmount;
-                }
-
-                return true;
-            });
-
-            // Ordenação
-            filtered.sort((a, b) => {
-                return sortOrder === 'ASC' 
-                    ? a.id.localeCompare(b.id)
-                    : b.id.localeCompare(a.id);
-            });
-
-            currentFilteredIds = filtered.map(item => item.id);
-            document.getElementById('rendered-count-badge').innerText = `Exibindo ${filtered.length} registro(s)`;
-
-            if (filtered.length === 0) {
-                grid.innerHTML = '';
-                emptyState.classList.remove('hidden');
-                return;
-            } else {
-                emptyState.classList.add('hidden');
-            }
-
-            // Gerar HTML dos Cards
-            grid.innerHTML = filtered.map(cfg => {
-                const item = receiptsData[cfg.id];
-                const isPaid = item.status === 'PAGO';
-                const formattedAmount = item.amount ? parseFloat(item.amount).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'R$ --';
-                const displayDate = item.date ? formatDateBR(item.date) : 'Data não informada';
-                const imgSrc = item.imageUrl || PLACEHOLDER_IMG;
-
-                return `
-                <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col justify-between">
-                    <!-- Cabeçalho do Card -->
-                    <div class="p-4 border-b border-slate-100 dark:border-slate-700/60 flex items-center justify-between">
-                        <div>
-                            <span class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Mês Ref.</span>
-                            <h3 class="text-base font-bold text-slate-900 dark:text-white">${cfg.label}</h3>
-                        </div>
-                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${
-                            isPaid 
-                                ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' 
-                                : 'bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800'
-                        }">
-                            <i data-lucide="${isPaid ? 'check-circle' : 'clock'}" class="w-3.5 h-3.5"></i>
-                            ${isPaid ? 'Pago / Anexado' : 'Pendente'}
-                        </span>
-                    </div>
-
-                    <!-- Visualização do Comprovante (Thumbnail) -->
-                    <div class="relative bg-slate-100 dark:bg-slate-900 h-48 flex items-center justify-center overflow-hidden group">
-                        <img src="${imgSrc}" alt="Comprovante ${cfg.label}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
-                        <div class="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                            ${item.imageUrl ? `
-                                <button onclick="openModal('${cfg.id}')" class="p-2.5 bg-white/90 text-slate-900 rounded-xl font-medium text-xs shadow-lg hover:bg-white flex items-center gap-1.5 transition">
-                                    <i data-lucide="eye" class="w-4 h-4"></i> Ampliar
-                                </button>
-                            ` : `
-                                <label class="p-2.5 bg-blue-600 text-white rounded-xl font-medium text-xs shadow-lg hover:bg-blue-700 flex items-center gap-1.5 transition cursor-pointer">
-                                    <i data-lucide="upload" class="w-4 h-4"></i> Carregar JPEG
-                                    <input type="file" accept="image/jpeg, image/jpg" class="hidden" onchange="handleCardUpload(event, '${cfg.id}')">
-                                </label>
-                            `}
-                        </div>
-                    </div>
-
-                    <!-- Detalhes do Pagamento -->
-                    <div class="p-4 space-y-2 text-xs text-slate-600 dark:text-slate-300">
-                        <div class="flex justify-between items-center">
-                            <span class="text-slate-400">Valor do Pagamento:</span>
-                            <span class="font-bold text-slate-900 dark:text-white text-sm">${formattedAmount}</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-slate-400">Data Efetuada:</span>
-                            <span class="font-medium">${displayDate}</span>
-                        </div>
-                        ${item.notes ? `
-                            <div class="pt-1 border-t border-slate-100 dark:border-slate-700/50">
-                                <span class="text-slate-400 block mb-0.5">Obs:</span>
-                                <p class="text-slate-700 dark:text-slate-300 italic truncate">${item.notes}</p>
-                            </div>
-                        ` : ''}
-                    </div>
-
-                    <!-- Botões de Ação Inferiores -->
-                    <div class="p-3 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-100 dark:border-slate-700/60 grid grid-cols-3 gap-1.5">
-                        <button onclick="openModal('${cfg.id}')" ${!item.imageUrl ? 'disabled' : ''} class="py-1.5 px-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg font-medium text-[11px] flex items-center justify-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed transition">
-                            <i data-lucide="maximize-2" class="w-3 h-3"></i> Ver
-                        </button>
-
-                        <button onclick="downloadImage('${cfg.id}')" ${!item.imageUrl ? 'disabled' : ''} class="py-1.5 px-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg font-medium text-[11px] flex items-center justify-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed transition">
-                            <i data-lucide="download" class="w-3 h-3"></i> Baixar
-                        </button>
-
-                        <button onclick="copyCardDetails('${cfg.id}')" class="py-1.5 px-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg font-medium text-[11px] flex items-center justify-center gap-1 transition">
-                            <i data-lucide="copy" class="w-3 h-3"></i> Copiar
-                        </button>
-                    </div>
-                </div>
-                `;
-            }).join('');
-
-            lucide.createIcons();
-        }
-
-        // Upload individual pelo card
-        function handleCardUpload(event, monthId) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            if (file.type !== 'image/jpeg' && file.type !== 'image/jpg') {
-                showToast('Por favor, selecione uma imagem no formato JPEG (.jpg / .jpeg).', 'error');
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                receiptsData[monthId].imageUrl = e.target.result;
-                receiptsData[monthId].status = 'PAGO';
-                if (!receiptsData[monthId].date) {
-                    receiptsData[monthId].date = new Date().toISOString().split('T')[0];
-                }
-                saveData();
-                showToast(`Comprovante de ${getMonthLabel(monthId)} atualizado!`, 'success');
-            };
-            reader.readAsDataURL(file);
-        }
-
-        // Formulário Global de Upload
-        function handleQuickFormSubmit(e) {
-            e.preventDefault();
-            const monthId = document.getElementById('quick-month-select').value;
-            const date = document.getElementById('quick-date-input').value;
-            const amount = document.getElementById('quick-amount-input').value;
-            const notes = document.getElementById('quick-notes-input').value;
-            const fileInput = document.getElementById('quick-file-input');
-
-            const item = receiptsData[monthId];
-            item.date = date;
-            item.amount = amount;
-            item.notes = notes;
-
-            if (fileInput.files && fileInput.files[0]) {
-                const file = fileInput.files[0];
-                if (file.type !== 'image/jpeg' && file.type !== 'image/jpg') {
-                    showToast('O arquivo deve ser exclusivamente JPEG.', 'error');
-                    return;
-                }
-
-                const reader = new FileReader();
-                reader.onload = function(evt) {
-                    item.imageUrl = evt.target.result;
-                    item.status = 'PAGO';
-                    saveData();
-                    showToast(`Informações e comprovante de ${getMonthLabel(monthId)} salvos com sucesso!`, 'success');
-                    document.getElementById('quick-upload-form').reset();
-                };
-                reader.readAsDataURL(file);
-            } else {
-                if (item.imageUrl) item.status = 'PAGO';
-                saveData();
-                showToast(`Dados de ${getMonthLabel(monthId)} atualizados com sucesso!`, 'success');
-                document.getElementById('quick-upload-form').reset();
-            }
-        }
-
-        // --- LÓGICA DO MODAL LIGHTBOX ---
-        function openModal(monthId) {
-            const index = currentFilteredIds.indexOf(monthId);
-            if (index !== -1) {
-                currentModalIndex = index;
-            } else {
-                currentModalIndex = 0;
-            }
-            updateModalContent();
-            document.getElementById('lightbox-modal').classList.remove('hidden');
-            document.getElementById('lightbox-modal').classList.add('flex');
-            resetImageTransform();
-        }
-
-        function closeModal() {
-            document.getElementById('lightbox-modal').classList.add('hidden');
-            document.getElementById('lightbox-modal').classList.remove('flex');
-        }
-
-        function navigateModal(direction) {
-            if (currentFilteredIds.length === 0) return;
-            currentModalIndex += direction;
-            if (currentModalIndex < 0) currentModalIndex = currentFilteredIds.length - 1;
-            if (currentModalIndex >= currentFilteredIds.length) currentModalIndex = 0;
-
-            resetImageTransform();
-            updateModalContent();
-        }
-
-        function updateModalContent() {
-            const currentId = currentFilteredIds[currentModalIndex];
-            if (!currentId) return;
-
-            const cfg = MONTHS_CONFIG.find(m => m.id === currentId);
-            const item = receiptsData[currentId];
-
-            document.getElementById('modal-title').innerText = `Comprovante - ${cfg.label}`;
-            const formattedAmount = item.amount ? parseFloat(item.amount).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'Valor não informado';
-            document.getElementById('modal-subtitle').innerText = `Beneficiário: Vinicius da Silva Alves • ${formattedAmount}`;
-
-            const imgEl = document.getElementById('modal-image');
-            imgEl.src = item.imageUrl || PLACEHOLDER_IMG;
-
-            document.getElementById('modal-date').innerText = `Data do Pagamento: ${item.date ? formatDateBR(item.date) : 'Não registrada'}`;
-            document.getElementById('modal-notes').innerText = item.notes ? `Obs: ${item.notes}` : 'Sem observações';
-
-            const statusBadge = document.getElementById('modal-status-badge');
-            if (item.status === 'PAGO') {
-                statusBadge.innerText = 'Confirmado';
-                statusBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
-            } else {
-                statusBadge.innerText = 'Pendente';
-                statusBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30';
-            }
-        }
-
-        // Transforma a imagem no Modal (Zoom & Rotação)
-        function zoomImage(step) {
-            currentZoom = Math.max(0.5, Math.min(3, currentZoom + step));
-            applyImageTransform();
-        }
-
-        function rotateImage(deg) {
-            currentRotation = (currentRotation + deg) % 360;
-            applyImageTransform();
-        }
-
-        function resetImageTransform() {
-            currentZoom = 1;
-            currentRotation = 0;
-            applyImageTransform();
-        }
-
-        function applyImageTransform() {
-            const imgEl = document.getElementById('modal-image');
-            imgEl.style.transform = `scale(${currentZoom}) rotate(${currentRotation}deg)`;
-        }
-
-        // Imprimir Comprovante Específico
-        function printCurrentReceipt() {
-            const currentId = currentFilteredIds[currentModalIndex];
-            if (!currentId) return;
-
-            const cfg = MONTHS_CONFIG.find(m => m.id === currentId);
-            const item = receiptsData[currentId];
-
-            document.getElementById('print-month').innerText = cfg.label;
-            document.getElementById('print-date').innerText = item.date ? formatDateBR(item.date) : 'Não informada';
-            document.getElementById('print-amount').innerText = item.amount ? parseFloat(item.amount).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'Não informado';
-            document.getElementById('print-notes').innerText = item.notes || 'Nenhuma';
-            document.getElementById('print-image').src = item.imageUrl || PLACEHOLDER_IMG;
-
-            window.print();
-        }
-
-        // Utilitários
-        function downloadImage(monthId) {
-            const item = receiptsData[monthId];
-            if (!item || !item.imageUrl) return;
-
-            const a = document.createElement('a');
-            a.href = item.imageUrl;
-            a.download = `Comprovante_Pensao_Vinicius_${monthId}.jpg`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            showToast('Download do comprovante iniciado.', 'info');
-        }
-
-        function copyCardDetails(monthId) {
-            const cfg = MONTHS_CONFIG.find(m => m.id === monthId);
-            const item = receiptsData[monthId];
-            const valor = item.amount ? parseFloat(item.amount).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'Não informado';
-            const data = item.date ? formatDateBR(item.date) : 'Não informada';
-
-            const text = `COMPROVANTE DE PENSÃO ALIMENTÍCIA\nBeneficiário: Vinicius da Silva Alves\nMês Ref: ${cfg.label}\nStatus: ${item.status}\nValor: ${valor}\nData de Pagamento: ${data}\nObservação: ${item.notes || 'Nenhuma'}`;
-
-            // Copiar via execCommand para compatibilidade com navegadores
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            document.body.appendChild(textarea);
-            textarea.select();
-            try {
-                document.execCommand('copy');
-                showToast('Informações copiadas para a área de transferência!', 'success');
-            } catch (err) {
-                showToast('Falha ao copiar texto.', 'error');
-            }
-            document.body.removeChild(textarea);
-        }
-
-        function exportSummaryData() {
-            let csv = "Mês Referencia;Status;Data Pagamento;Valor (R$);Observações\n";
-            MONTHS_CONFIG.forEach(cfg => {
-                const item = receiptsData[cfg.id];
-                csv += `"${cfg.label}";"${item.status}";"${item.date || ''}";"${item.amount || ''}";"${item.notes || ''}"\n`;
-            });
-
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Relatorio_Pensao_Vinicius_2025_2026.csv`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            showToast('Relatório CSV exportado com sucesso!', 'success');
-        }
-
-        function formatDateBR(dateStr) {
-            if (!dateStr) return '';
-            const parts = dateStr.split('-');
-            if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
-            return dateStr;
-        }
-
-        function getMonthLabel(monthId) {
-            const cfg = MONTHS_CONFIG.find(m => m.id === monthId);
-            return cfg ? cfg.label : monthId;
-        }
-
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toast-message');
-            const toastIcon = document.getElementById('toast-icon');
-
-            toastMessage.innerText = message;
-
-            if (type === 'error') {
-                toastIcon.setAttribute('data-lucide', 'alert-circle');
-                toastIcon.className = 'w-5 h-5 text-rose-500';
-            } else {
-                toastIcon.setAttribute('data-lucide', 'check-circle');
-                toastIcon.className = 'w-5 h-5 text-emerald-400';
-            }
-            lucide.createIcons();
-
-            toast.classList.remove('opacity-0', 'translate-y-10', 'pointer-events-none');
-            toast.classList.add('opacity-100', 'translate-y-0');
-
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-10', 'pointer-events-none');
-                toast.classList.remove('opacity-100', 'translate-y-0');
-            }, 3500);
-        }
-
-        // Atalhos de teclado no Modal
-        document.addEventListener('keydown', (e) => {
-            const modal = document.getElementById('lightbox-modal');
-            if (!modal.classList.contains('hidden')) {
-                if (e.key === 'Escape') closeModal();
-                if (e.key === 'ArrowLeft') navigateModal(-1);
-                if (e.key === 'ArrowRight') navigateModal(1);
-            }
-        });
-    </script>
+        card.innerHTML = `
+          <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-white dark:bg-slate-800">
+            <h2 class="font-bold text-slate-900 dark:text-white text-base flex items-center gap-2">
+              <i data-lucide="calendar" class="w-4 h-4 text-brand-600 dark:text-brand-500"></i>
+              ${item.title}
+            </h2>
+            ${item.loadedSrc ? `<span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800"><i data-lucide="check-circle" class="w-3 h-3"></i> Anexado</span>` : `<span class="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800"><i data-lucide="clock" class="w-3 h-3"></i> Pendente</span>`}
+          </div>
+          ${contentHTML}
+        `;
+
+        container.appendChild(card);
+      });
+
+      lucide.createIcons();
+    }
+
+    // Alterar Filtro
+    function setFilter(year) {
+      currentFilter = year;
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('bg-white', 'dark:bg-slate-800', 'text-slate-800', 'dark:text-white', 'shadow-sm');
+        btn.classList.add('text-slate-600', 'dark:text-slate-300');
+      });
+
+      const activeBtn = document.getElementById(`filter-${year.toLowerCase()}`);
+      if (activeBtn) {
+        activeBtn.classList.add('bg-white', 'dark:bg-slate-800', 'text-slate-800', 'dark:text-white', 'shadow-sm');
+        activeBtn.classList.remove('text-slate-600', 'dark:text-slate-300');
+      }
+
+      renderGrid();
+    }
+
+    // Alternar Ordenação
+    function toggleSort() {
+      currentSort = currentSort === 'DESC' ? 'ASC' : 'DESC';
+      document.getElementById('sort-label').textContent = currentSort === 'DESC' ? 'Mais Recente' : 'Mais Antigo';
+      renderGrid();
+    }
+
+    // Modos Tema (Claro / Escuro)
+    function toggleTheme() {
+      document.documentElement.classList.toggle('dark');
+      localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+    }
+
+    // Sistema Lightbox Modal
+    function openLightbox(src, title) {
+      const modal = document.getElementById('lightbox');
+      const img = document.getElementById('lightbox-img');
+      const titleElem = document.getElementById('lightbox-title');
+
+      titleElem.textContent = title;
+      img.src = src;
+
+      currentZoom = 1;
+      currentRotation = 0;
+      updateImageTransform();
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeLightbox() {
+      const modal = document.getElementById('lightbox');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function zoomIn() {
+      currentZoom = Math.min(currentZoom + 0.25, 3);
+      updateImageTransform();
+    }
+
+    function zoomOut() {
+      currentZoom = Math.max(currentZoom - 0.25, 0.5);
+      updateImageTransform();
+    }
+
+    function rotateImage() {
+      currentRotation = (currentRotation + 90) % 360;
+      updateImageTransform();
+    }
+
+    function updateImageTransform() {
+      const img = document.getElementById('lightbox-img');
+      img.style.transform = `scale(${currentZoom}) rotate(${currentRotation}deg)`;
+    }
+
+    // Teclado shortcuts (ESC para fechar lightbox)
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeLightbox();
+    });
+
+    // Inicialização da Aplicação
+    window.onload = async () => {
+      // Aplicar tema salvo no localStorage
+      if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+
+      // Gerar lista de meses
+      const list = generatePeriodList();
+      
+      // Carregar status das imagens
+      itemsData = await Promise.all(list.map(item => tryLoadImage(item)));
+
+      // Renderizar UI inicial
+      renderGrid();
+    };
+  </script>
 </body>
 </html>
