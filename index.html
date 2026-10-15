@@ -116,9 +116,8 @@
 
   <script>
     // ==========================================
-    // CONFIGURAÇÃO DO REPOSITÓRIO E IMAGENS
+    // CONFIGURAÇÃO DO REPOSITÓRIO E MAPEAMENTO
     // ==========================================
-    // URL base Raw para o seu repositório no GitHub
     const BASE_RAW_URL = 'https://raw.githubusercontent.com/guigesaifarm/pensao_vinicius/main/';
 
     const NOMES_MESES = [
@@ -126,19 +125,37 @@
       'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
     ];
 
-    const NOMES_MESES_CLEAN = [
-      'janeiro', 'fevereiro', 'marco', 'abril', 'maio', 'junho',
-      'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
-    ];
+    // Mapeamento explícito de nomes e múltiplos arquivos por mês
+    const MAPA_ARQUIVOS = {
+      '2025-05': ['maio_2025.jpg'],
+      '2025-06': ['junho_2025.jpg', 'Junho_2025.jpg'],
+      '2025-07': ['julho_2025.jpg', 'Julho_2025.jpg'],
+      '2025-08': ['agosto_2025.jpg', 'Agosto_2025.jpg'],
+      '2025-09': ['setembro_2025.jpg', 'Setembro_2025.jpg'],
+      '2025-10': ['outubro_2025.jpg', 'Outubro_2025.jpg'],
+      '2025-11': ['novembro_2025.jpg', 'Novembro_2025.jpg'],
+      '2025-12': ['dezembro_2025.jpg', 'Dezembro_2025.jpg'],
+      
+      '2026-01': ['janeiro_2026.jpg', 'Janeiro_2026.jpg'],
+      '2026-02': ['fevereiro_2026.jpg', 'Fevereiro_2026.jpg'],
+      '2026-03': ['Marcoa_2026.jpg', 'Marcob_2026.jpg'], // Múltiplos comprovantes no mês
+      '2026-04': ['abril_2026.jpg', 'Abril_2026.jpg'],
+      '2026-05': ['maio_2026.jpg', 'Maio_2026.jpg'],
+      '2026-06': ['junho_2026.jpg', 'Junho_2026.jpg'],
+      '2026-07': ['julho_2026.jpg', 'Julho_2026.jpg'],
+      '2026-08': ['agosto_2026.jpg', 'Agosto_2026.jpg'],
+      '2026-09': ['setembro_2026.jpg', 'Setembro_2026.jpg'],
+      '2026-10': ['outubro_2026.jpg', 'Outubro_2026.jpg']
+    };
 
     // Estado da Aplicação
     let currentFilter = 'ALL';
-    let currentSort = 'DESC'; // 'DESC' = Mais recente primeiro | 'ASC' = Mais antigo primeiro
+    let currentSort = 'DESC'; 
     let itemsData = [];
     let currentZoom = 1;
     let currentRotation = 0;
 
-    // Gerar a lista de meses no intervalo de Junho/2025 a Outubro/2026
+    // Gerar lista de meses de Junho/2025 a Outubro/2026
     function generatePeriodList() {
       const list = [];
       const startYear = 2025;
@@ -151,29 +168,18 @@
         const mEnd = (y === endYear) ? endMonth : 11;
 
         for (let m = mStart; m <= mEnd; m++) {
-          const monthStrNum = String(m + 1).padStart(2, '0');
-          const monthLower = NOMES_MESES_CLEAN[m];
-          const monthCap = NOMES_MESES[m];
-
-          // Lista de possíveis padrões de nome do arquivo no repositório
-          const possiblePaths = [
-            `${BASE_RAW_URL}${monthLower}_${y}.jpg`,
-            `${BASE_RAW_URL}${monthLower}_${y}.jpeg`,
-            `${BASE_RAW_URL}${monthCap}${y}.jpg`,
-            `${BASE_RAW_URL}${monthCap}${y}.jpeg`,
-            `${BASE_RAW_URL}${monthLower}${y}.jpg`,
-            `${BASE_RAW_URL}${monthLower}${y}.jpeg`,
-            `${BASE_RAW_URL}${y}-${monthStrNum}.jpg`,
-            `${BASE_RAW_URL}${y}-${monthStrNum}.jpeg`,
-            `${BASE_RAW_URL}${y}-${monthStrNum}.png`
-          ];
-
+          const monthKey = `${y}-${String(m + 1).padStart(2, '0')}`;
+          
+          // Recuperar arquivos mapeados ou gerar padrão genérico como fallback
+          const nomesArquivos = MAPA_ARQUIVOS[monthKey] || [`${NOMES_MESES[m].toLowerCase()}_${y}.jpg`];
+          
           list.push({
             year: y,
             month: m,
             title: `${NOMES_MESES[m]} de ${y}`,
-            possiblePaths: possiblePaths,
-            loadedSrc: null,
+            monthKey: monthKey,
+            filenames: nomesArquivos,
+            loadedSrcs: [],
             notFound: false
           });
         }
@@ -181,36 +187,42 @@
       return list;
     }
 
-    // Tentar carregar a imagem testando os caminhos possíveis
-    function tryLoadImage(item) {
+    // Carregar imagens válidas verificando cada arquivo mapeado no GitHub
+    function tryLoadImages(item) {
       return new Promise((resolve) => {
-        let pathIndex = 0;
+        let validSrcs = [];
+        let index = 0;
 
-        function attemptNext() {
-          if (pathIndex >= item.possiblePaths.length) {
-            item.notFound = true;
+        function checkNext() {
+          if (index >= item.filenames.length) {
+            item.loadedSrcs = validSrcs;
+            item.notFound = validSrcs.length === 0;
             resolve(item);
             return;
           }
 
-          const currentPath = item.possiblePaths[pathIndex];
+          const filename = item.filenames[index];
+          const fullUrl = `${BASE_RAW_URL}${filename}`;
           const img = new Image();
-          
+
           img.onload = () => {
-            item.loadedSrc = currentPath;
-            item.notFound = false;
-            resolve(item);
+            validSrcs.push({
+              url: fullUrl,
+              label: item.filenames.length > 1 ? `Comprovante ${index + 1}` : item.title
+            });
+            index++;
+            checkNext();
           };
 
           img.onerror = () => {
-            pathIndex++;
-            attemptNext();
+            index++;
+            checkNext();
           };
 
-          img.src = currentPath;
+          img.src = fullUrl;
         }
 
-        attemptNext();
+        checkNext();
       });
     }
 
@@ -239,16 +251,38 @@
 
         let contentHTML = '';
 
-        if (item.loadedSrc) {
-          contentHTML = `
-            <div class="relative group cursor-pointer overflow-hidden bg-slate-100 dark:bg-slate-900 aspect-[4/3] flex items-center justify-center" onclick="openLightbox('${item.loadedSrc}', '${item.title}')">
-              <img src="${item.loadedSrc}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
-              <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white font-medium text-sm">
-                <i data-lucide="maximize-2" class="w-5 h-5"></i>
-                Visualizar Comprovante
+        if (item.loadedSrcs && item.loadedSrcs.length > 0) {
+          // Se houver mais de uma imagem (ex: Março de 2026 com Marcoa e Marcob), exibe grade interna
+          if (item.loadedSrcs.length > 1) {
+            let imagesGrid = '';
+            item.loadedSrcs.forEach((imgObj, idx) => {
+              imagesGrid += `
+                <div class="relative group cursor-pointer overflow-hidden bg-slate-100 dark:bg-slate-900 aspect-[4/3] rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center" onclick="openLightbox('${imgObj.url}', '${item.title} - ${imgObj.label}')">
+                  <img src="${imgObj.url}" alt="${item.title} ${imgObj.label}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                  <div class="absolute bottom-1 left-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded backdrop-blur-sm">
+                    ${imgObj.label}
+                  </div>
+                  <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 text-white font-medium text-xs">
+                    <i data-lucide="maximize-2" class="w-4 h-4"></i> Ampliar
+                  </div>
+                </div>
+              `;
+            });
+
+            contentHTML = `<div class="p-4 grid grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-900/40">${imagesGrid}</div>`;
+          } else {
+            // Apenas uma imagem principal
+            const singleImg = item.loadedSrcs[0];
+            contentHTML = `
+              <div class="relative group cursor-pointer overflow-hidden bg-slate-100 dark:bg-slate-900 aspect-[4/3] flex items-center justify-center" onclick="openLightbox('${singleImg.url}', '${item.title}')">
+                <img src="${singleImg.url}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white font-medium text-sm">
+                  <i data-lucide="maximize-2" class="w-5 h-5"></i>
+                  Visualizar Comprovante
+                </div>
               </div>
-            </div>
-          `;
+            `;
+          }
         } else {
           contentHTML = `
             <div class="p-6 bg-slate-50 dark:bg-slate-900/50 aspect-[4/3] flex flex-col items-center justify-center text-center border-t border-slate-100 dark:border-slate-700/50">
@@ -257,11 +291,13 @@
               </div>
               <p class="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Comprovante não localizado</p>
               <p class="text-[11px] text-slate-500 dark:text-slate-400 max-w-[220px]">
-                Envie o arquivo para a raiz do repositório nomeado como <code class="bg-slate-200 dark:bg-slate-800 px-1 py-0.5 rounded font-mono">${NOMES_MESES_CLEAN[item.month]}_${item.year}.jpg</code>
+                Envie a imagem correspondente para o repositório GitHub.
               </p>
             </div>
           `;
         }
+
+        const isAttached = item.loadedSrcs && item.loadedSrcs.length > 0;
 
         card.innerHTML = `
           <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-white dark:bg-slate-800">
@@ -269,8 +305,8 @@
               <i data-lucide="calendar" class="w-4 h-4 text-brand-600 dark:text-brand-500"></i>
               ${item.title}
             </h2>
-            ${item.loadedSrc 
-              ? `<span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800"><i data-lucide="check-circle" class="w-3 h-3"></i> Anexado</span>` 
+            ${isAttached 
+              ? `<span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800"><i data-lucide="check-circle" class="w-3 h-3"></i> ${item.loadedSrcs.length > 1 ? item.loadedSrcs.length + ' Anexos' : 'Anexado'}</span>` 
               : `<span class="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800"><i data-lucide="clock" class="w-3 h-3"></i> Pendente</span>`
             }
           </div>
@@ -283,7 +319,7 @@
       lucide.createIcons();
     }
 
-    // Alternar Filtro por Ano
+    // Filtros e Ordenação
     function setFilter(year) {
       currentFilter = year;
       document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -300,20 +336,18 @@
       renderGrid();
     }
 
-    // Alternar Ordenação (Recente / Antigo)
     function toggleSort() {
       currentSort = currentSort === 'DESC' ? 'ASC' : 'DESC';
       document.getElementById('sort-label').textContent = currentSort === 'DESC' ? 'Mais Recente' : 'Mais Antigo';
       renderGrid();
     }
 
-    // Alternar Tema (Claro / Escuro)
     function toggleTheme() {
       document.documentElement.classList.toggle('dark');
       localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
     }
 
-    // Sistema Lightbox Modal
+    // Modal Lightbox
     function openLightbox(src, title) {
       const modal = document.getElementById('lightbox');
       const img = document.getElementById('lightbox-img');
@@ -356,25 +390,21 @@
       img.style.transform = `scale(${currentZoom}) rotate(${currentRotation}deg)`;
     }
 
-    // Tecla ESC para fechar modal
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeLightbox();
     });
 
     // Inicialização do App
     window.onload = async () => {
-      // Aplicar tema salvo
       if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
         document.documentElement.classList.add('dark');
       } else {
         document.documentElement.classList.remove('dark');
       }
 
-      // Gerar lista e testar requisição das imagens
       const list = generatePeriodList();
-      itemsData = await Promise.all(list.map(item => tryLoadImage(item)));
+      itemsData = await Promise.all(list.map(item => tryLoadImages(item)));
 
-      // Renderizar grid inicial
       renderGrid();
     };
   </script>
