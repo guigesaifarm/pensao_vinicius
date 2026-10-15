@@ -31,7 +31,7 @@
       font-family: 'Inter', sans-serif;
     }
     .img-zoom {
-      transition: transform 0.3s ease, rotate 0.3s ease;
+      transition: transform 0.3s ease;
     }
   </style>
 </head>
@@ -116,19 +116,19 @@
 
   <script>
     // ==========================================
-    // CONFIGURAÇÕES DO REPOSITÓRIO
+    // CONFIGURAÇÃO DO REPOSITÓRIO E IMAGENS
     // ==========================================
-    // Altere este caminho se a pasta de comprovantes estiver em outro diretório
-    const PASTA_COMPROVANTES = 'https://github.com/guigesaifarm/pensao_vinicius/blob/main/junho_2025.jpg';
-    const PASTA_COMPROVANTES = 'https://github.com/guigesaifarm/pensao_vinicius/blob/main/Julho2025.jpg';
+    // URL base Raw para o seu repositório no GitHub
+    const BASE_RAW_URL = 'https://raw.githubusercontent.com/guigesaifarm/pensao_vinicius/main/';
 
-    // Formatos e convenções de nomes suportados para busca automática
-    const FORMATOS = ['jpeg', 'jpg', 'png'];
-
-    // Mapeamento dos nomes dos meses
     const NOMES_MESES = [
       'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
       'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+
+    const NOMES_MESES_CLEAN = [
+      'janeiro', 'fevereiro', 'marco', 'abril', 'maio', 'junho',
+      'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
     ];
 
     // Estado da Aplicação
@@ -138,7 +138,7 @@
     let currentZoom = 1;
     let currentRotation = 0;
 
-    // Gerar a lista de meses (Jun/2025 a Out/2026)
+    // Gerar a lista de meses no intervalo de Junho/2025 a Outubro/2026
     function generatePeriodList() {
       const list = [];
       const startYear = 2025;
@@ -152,20 +152,25 @@
 
         for (let m = mStart; m <= mEnd; m++) {
           const monthStrNum = String(m + 1).padStart(2, '0');
-          const monthNameLower = NOMES_MESES[m].toLowerCase();
-          
-          // Gerar variações de nomes possíveis
-          const possiblePaths = [];
-          FORMATOS.forEach(ext => {
-            possiblePaths.push(`${PASTA_COMPROVANTES}${y}-${monthStrNum}.${ext}`);
-            possiblePaths.push(`${PASTA_COMPROVANTES}${monthNameLower}-${y}.${ext}`);
-            possiblePaths.push(`${PASTA_COMPROVANTES}${monthStrNum}-${y}.${ext}`);
-          });
+          const monthLower = NOMES_MESES_CLEAN[m];
+          const monthCap = NOMES_MESES[m];
+
+          // Lista de possíveis padrões de nome do arquivo no repositório
+          const possiblePaths = [
+            `${BASE_RAW_URL}${monthLower}_${y}.jpg`,
+            `${BASE_RAW_URL}${monthLower}_${y}.jpeg`,
+            `${BASE_RAW_URL}${monthCap}${y}.jpg`,
+            `${BASE_RAW_URL}${monthCap}${y}.jpeg`,
+            `${BASE_RAW_URL}${monthLower}${y}.jpg`,
+            `${BASE_RAW_URL}${monthLower}${y}.jpeg`,
+            `${BASE_RAW_URL}${y}-${monthStrNum}.jpg`,
+            `${BASE_RAW_URL}${y}-${monthStrNum}.jpeg`,
+            `${BASE_RAW_URL}${y}-${monthStrNum}.png`
+          ];
 
           list.push({
             year: y,
             month: m,
-            monthName: NOMES_MESES[m],
             title: `${NOMES_MESES[m]} de ${y}`,
             possiblePaths: possiblePaths,
             loadedSrc: null,
@@ -176,7 +181,7 @@
       return list;
     }
 
-    // Tentar carregar imagem das rotas possíveis
+    // Tentar carregar a imagem testando os caminhos possíveis
     function tryLoadImage(item) {
       return new Promise((resolve) => {
         let pathIndex = 0;
@@ -209,25 +214,25 @@
       });
     }
 
-    // Renderizar Interface
+    // Renderizar Interface Principal
     function renderGrid() {
       const container = document.getElementById('grid-container');
       container.innerHTML = '';
 
-      // Filtragem
+      // Filtragem por ano
       let filtered = itemsData.filter(item => {
         if (currentFilter === 'ALL') return true;
         return item.year.toString() === currentFilter;
       });
 
-      // Ordenação
+      // Ordenação por data
       filtered.sort((a, b) => {
         const dateA = new Date(a.year, a.month);
         const dateB = new Date(b.year, b.month);
         return currentSort === 'DESC' ? dateB - dateA : dateA - dateB;
       });
 
-      // Gerar Cards
+      // Renderizar Cards
       filtered.forEach(item => {
         const card = document.createElement('div');
         card.className = 'bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow';
@@ -250,9 +255,9 @@
               <div class="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-3">
                 <i data-lucide="image-off" class="w-6 h-6"></i>
               </div>
-              <p class="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Comprovante não localizado no repositório</p>
+              <p class="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Comprovante não localizado</p>
               <p class="text-[11px] text-slate-500 dark:text-slate-400 max-w-[220px]">
-                Adicione a imagem na pasta <code class="bg-slate-200 dark:bg-slate-800 px-1 py-0.5 rounded text-brand-600 dark:text-brand-400 font-mono">${PASTA_COMPROVANTES}</code> com o nome <code class="bg-slate-200 dark:bg-slate-800 px-1 py-0.5 rounded font-mono">${item.year}-${String(item.month + 1).padStart(2, '0')}.jpeg</code>
+                Envie o arquivo para a raiz do repositório nomeado como <code class="bg-slate-200 dark:bg-slate-800 px-1 py-0.5 rounded font-mono">${NOMES_MESES_CLEAN[item.month]}_${item.year}.jpg</code>
               </p>
             </div>
           `;
@@ -264,7 +269,10 @@
               <i data-lucide="calendar" class="w-4 h-4 text-brand-600 dark:text-brand-500"></i>
               ${item.title}
             </h2>
-            ${item.loadedSrc ? `<span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800"><i data-lucide="check-circle" class="w-3 h-3"></i> Anexado</span>` : `<span class="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800"><i data-lucide="clock" class="w-3 h-3"></i> Pendente</span>`}
+            ${item.loadedSrc 
+              ? `<span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800"><i data-lucide="check-circle" class="w-3 h-3"></i> Anexado</span>` 
+              : `<span class="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800"><i data-lucide="clock" class="w-3 h-3"></i> Pendente</span>`
+            }
           </div>
           ${contentHTML}
         `;
@@ -275,7 +283,7 @@
       lucide.createIcons();
     }
 
-    // Alterar Filtro
+    // Alternar Filtro por Ano
     function setFilter(year) {
       currentFilter = year;
       document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -292,14 +300,14 @@
       renderGrid();
     }
 
-    // Alternar Ordenação
+    // Alternar Ordenação (Recente / Antigo)
     function toggleSort() {
       currentSort = currentSort === 'DESC' ? 'ASC' : 'DESC';
       document.getElementById('sort-label').textContent = currentSort === 'DESC' ? 'Mais Recente' : 'Mais Antigo';
       renderGrid();
     }
 
-    // Modos Tema (Claro / Escuro)
+    // Alternar Tema (Claro / Escuro)
     function toggleTheme() {
       document.documentElement.classList.toggle('dark');
       localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
@@ -348,27 +356,25 @@
       img.style.transform = `scale(${currentZoom}) rotate(${currentRotation}deg)`;
     }
 
-    // Teclado shortcuts (ESC para fechar lightbox)
+    // Tecla ESC para fechar modal
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeLightbox();
     });
 
-    // Inicialização da Aplicação
+    // Inicialização do App
     window.onload = async () => {
-      // Aplicar tema salvo no localStorage
+      // Aplicar tema salvo
       if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
         document.documentElement.classList.add('dark');
       } else {
         document.documentElement.classList.remove('dark');
       }
 
-      // Gerar lista de meses
+      // Gerar lista e testar requisição das imagens
       const list = generatePeriodList();
-      
-      // Carregar status das imagens
       itemsData = await Promise.all(list.map(item => tryLoadImage(item)));
 
-      // Renderizar UI inicial
+      // Renderizar grid inicial
       renderGrid();
     };
   </script>
