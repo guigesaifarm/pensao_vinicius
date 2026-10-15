@@ -47,7 +47,7 @@
         </h1>
         <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5">
           <i data-lucide="calendar-range" class="w-4 h-4"></i>
-          Período: Junho de 2025 a Outubro de 2026
+          Período: Junho de 2025 a Outubro de 2026 (Incluindo 13º Salário)
         </p>
       </div>
 
@@ -75,7 +75,7 @@
     </div>
   </header>
 
-  <!-- Main Content Grid (Alterado para max-w-5xl e lg:grid-cols-2 para blocos maiores) -->
+  <!-- Main Content Grid -->
   <main class="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div id="grid-container" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
       <!-- Cards renderizados dinamicamente via JS -->
@@ -120,67 +120,35 @@
     // ==========================================
     const BASE_RAW_URL = 'https://raw.githubusercontent.com/guigesaifarm/pensao_vinicius/main/';
 
-    const NOMES_MESES = [
-      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-    ];
-
-    const MAPA_ARQUIVOS = {
-      '2025-05': ['maio_2025.jpg'],
-      '2025-06': ['junho_2025.jpg', 'Junho_2025.jpg'],
-      '2025-07': ['julho_2025.jpg', 'Julho_2025.jpg'],
-      '2025-08': ['agosto_2025.jpg', 'Agosto_2025.jpg'],
-      '2025-09': ['setembro_2025.jpg', 'Setembro_2025.jpg'],
-      '2025-10': ['outubro_2025.jpg', 'Outubro_2025.jpg'],
-      '2025-11': ['novembro_2025.jpg', 'Novembro_2025.jpg'],
-      '2025-12': ['dezembro_2025.jpg', 'Dezembro_2025.jpg'],
+    // Mapeamento explícito incluindo os Décimos Terceiros
+    const MAPA_ITENS = [
+      { key: '2025-06', title: 'Junho de 2025', year: 2025, month: 5, filenames: ['junho_2025.jpg', 'Junho_2025.jpg'] },
+      { key: '2025-07', title: 'Julho de 2025', year: 2025, month: 6, filenames: ['julho_2025.jpg', 'Julho_2025.jpg'] },
+      { key: '2025-08', title: 'Agosto de 2025', year: 2025, month: 7, filenames: ['agosto_2025.jpg', 'Agosto_2025.jpg'] },
+      { key: '2025-09', title: 'Setembro de 2025', year: 2025, month: 8, filenames: ['setembro_2025.jpg', 'Setembro_2025.jpg'] },
+      { key: '2025-10', title: 'Outubro de 2025', year: 2025, month: 9, filenames: ['outubro_2025.jpg', 'Outubro_2025.jpg'] },
+      { key: '2025-11', title: 'Novembro de 2025', year: 2025, month: 10, filenames: ['novembro_2025.jpg', 'Novembro_2025.jpg'] },
+      { key: '2025-12', title: 'Dezembro de 2025', year: 2025, month: 11, filenames: ['dezembro_2025.jpg', 'Dezembro_2025.jpg'] },
+      { key: '2025-13', title: '13º Salário de 2025', year: 2025, month: 11.5, filenames: ['DecimoTerceiro_2025.jpg', 'decimoterceiro_2025.jpg'] },
       
-      '2026-01': ['janeiro_2026.jpg', 'Janeiro_2026.jpg'],
-      '2026-02': ['fevereiro_2026.jpg', 'Fevereiro_2026.jpg'],
-      '2026-03': ['Marcoa_2026.jpg', 'Marcob_2026.jpg'],
-      '2026-04': ['abril_2026.jpg', 'Abril_2026.jpg'],
-      '2026-05': ['maio_2026.jpg', 'Maio_2026.jpg'],
-      '2026-06': ['junho_2026.jpg', 'Junho_2026.jpg'],
-      '2026-07': ['julho_2026.jpg', 'Julho_2026.jpg'],
-      '2026-08': ['agosto_2026.jpg', 'Agosto_2026.jpg'],
-      '2026-09': ['setembro_2026.jpg', 'Setembro_2026.jpg'],
-      '2026-10': ['outubro_2026.jpg', 'Outubro_2026.jpg']
-    };
+      { key: '2026-01', title: 'Janeiro de 2026', year: 2026, month: 0, filenames: ['janeiro_2026.jpg', 'Janeiro_2026.jpg'] },
+      { key: '2026-02', title: 'Fevereiro de 2026', year: 2026, month: 1, filenames: ['fevereiro_2026.jpg', 'Fevereiro_2026.jpg'] },
+      { key: '2026-03', title: 'Março de 2026', year: 2026, month: 2, filenames: ['Marcoa_2026.jpg', 'Marcob_2026.jpg'] },
+      { key: '2026-04', title: 'Abril de 2026', year: 2026, month: 3, filenames: ['abril_2026.jpg', 'Abril_2026.jpg'] },
+      { key: '2026-05', title: 'Maio de 2026', year: 2026, month: 4, filenames: ['maio_2026.jpg', 'Maio_2026.jpg'] },
+      { key: '2026-06', title: 'Junho de 2026', year: 2026, month: 5, filenames: ['junho_2026.jpg', 'Junho_2026.jpg'] },
+      { key: '2026-07', title: 'Julho de 2026', year: 2026, month: 6, filenames: ['julho_2026.jpg', 'Julho_2026.jpg'] },
+      { key: '2026-08', title: 'Agosto de 2026', year: 2026, month: 7, filenames: ['agosto_2026.jpg', 'Agosto_2026.jpg'] },
+      { key: '2026-09', title: 'Setembro de 2026', year: 2026, month: 8, filenames: ['setembro_2026.jpg', 'Setembro_2026.jpg'] },
+      { key: '2026-10', title: 'Outubro de 2026', year: 2026, month: 9, filenames: ['outubro_2026.jpg', 'Outubro_2026.jpg'] },
+      { key: '2026-13', title: '13º Salário de 2026', year: 2026, month: 9.5, filenames: ['DecimoTerceiro_2026.jpg', 'decimoterceiro_2026.jpg'] }
+    ];
 
     let currentFilter = 'ALL';
     let currentSort = 'DESC'; 
     let itemsData = [];
     let currentZoom = 1;
     let currentRotation = 0;
-
-    function generatePeriodList() {
-      const list = [];
-      const startYear = 2025;
-      const startMonth = 5; 
-      const endYear = 2026;
-      const endMonth = 9;  
-
-      for (let y = startYear; y <= endYear; y++) {
-        const mStart = (y === startYear) ? startMonth : 0;
-        const mEnd = (y === endYear) ? endMonth : 11;
-
-        for (let m = mStart; m <= mEnd; m++) {
-          const monthKey = `${y}-${String(m + 1).padStart(2, '0')}`;
-          const nomesArquivos = MAPA_ARQUIVOS[monthKey] || [`${NOMES_MESES[m].toLowerCase()}_${y}.jpg`];
-          
-          list.push({
-            year: y,
-            month: m,
-            title: `${NOMES_MESES[m]} de ${y}`,
-            monthKey: monthKey,
-            filenames: nomesArquivos,
-            loadedSrcs: [],
-            notFound: false
-          });
-        }
-      }
-      return list;
-    }
 
     function tryLoadImages(item) {
       return new Promise((resolve) => {
@@ -224,20 +192,17 @@
       const container = document.getElementById('grid-container');
       container.innerHTML = '';
 
-      let filtered = itemsData.filter(item => {
+      let filtered = MAPA_ITENS.filter(item => {
         if (currentFilter === 'ALL') return true;
         return item.year.toString() === currentFilter;
       });
 
       filtered.sort((a, b) => {
-        const dateA = new Date(a.year, a.month);
-        const dateB = new Date(b.year, b.month);
-        return currentSort === 'DESC' ? dateB - dateA : dateA - dateB;
+        return currentSort === 'DESC' ? b.month - a.month : a.month - b.month;
       });
 
       filtered.forEach(item => {
         const card = document.createElement('div');
-        // Adicionado rounded-2xl e sombra mais pronunciada para blocos maiores
         card.className = 'bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-md overflow-hidden flex flex-col hover:shadow-lg transition-shadow';
 
         let contentHTML = '';
@@ -245,7 +210,7 @@
         if (item.loadedSrcs && item.loadedSrcs.length > 0) {
           if (item.loadedSrcs.length > 1) {
             let imagesGrid = '';
-            item.loadedSrcs.forEach((imgObj, idx) => {
+            item.loadedSrcs.forEach((imgObj) => {
               imagesGrid += `
                 <div class="relative group cursor-pointer overflow-hidden bg-slate-100 dark:bg-slate-900 aspect-[16/11] rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-center" onclick="openLightbox('${imgObj.url}', '${item.title} - ${imgObj.label}')">
                   <img src="${imgObj.url}" alt="${item.title} ${imgObj.label}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
@@ -262,7 +227,6 @@
             contentHTML = `<div class="p-5 grid grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-900/40">${imagesGrid}</div>`;
           } else {
             const singleImg = item.loadedSrcs[0];
-            // Proporção de imagem aumentada para blocos maiores (aspect-[16/10])
             contentHTML = `
               <div class="relative group cursor-pointer overflow-hidden bg-slate-100 dark:bg-slate-900 aspect-[16/10] flex items-center justify-center" onclick="openLightbox('${singleImg.url}', '${item.title}')">
                 <img src="${singleImg.url}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
@@ -389,9 +353,7 @@
         document.documentElement.classList.remove('dark');
       }
 
-      const list = generatePeriodList();
-      itemsData = await Promise.all(list.map(item => tryLoadImages(item)));
-
+      itemsData = await Promise.all(MAPA_ITENS.map(item => tryLoadImages(item)));
       renderGrid();
     };
   </script>
